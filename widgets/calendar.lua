@@ -12,7 +12,8 @@ local awful        = require("awful")
 local naughty      = require("naughty")
 local os           = { date   = os.date }
 local string       = { format = string.format,
-                       gsub   = string.gsub }
+                       gsub   = string.gsub,
+		       sub = string.sub }
 local ipairs       = ipairs
 local tonumber     = tonumber
 local setmetatable = setmetatable
@@ -29,6 +30,9 @@ end
 
 function calendar.show(t_out, inc_offset, scr)
     local today = os.date("%d")
+    if string.sub( today, 1, 1) == "0" then
+       today = string.sub( today, 2)
+    end
     local offs = inc_offset or 0
     local f
 
@@ -67,12 +71,17 @@ function calendar.show(t_out, inc_offset, scr)
     end
 
     helpers.async(f, function(ws)
-        fg, bg = calendar.notification_preset.fg, calendar.notification_preset.bg
-        ws = ws:gsub("%c%[%d+[m]?%d+%c%[%d+[m]?", markup.bold(markup.color(bg, fg, today)))
+        fg, bg, we = calendar.notification_preset.fg, calendar.notification_preset.bg, calendar.notification_preset.we
+        ws = ws:gsub("<(%s*)%d+>", " %1"..markup.bold(markup.color(bg, fg, today)).." ")
+	ws = ws:gsub("(%d%d%d%d)", "%1 ")
+        ws = ws:gsub('(%d+%s%s%s)(\n)', markup.color(we, bg, '%1')..'%2')
+        ws = ws:gsub('(%d+%s+%d+)(\n)', markup.color(we, bg, '%1')..'%2')
+        ws = ws:gsub('(%d+)(\n)', markup.color(we, bg, '%1')..'%2')
+	ws = ws:gsub("\n*$", "")
         calendar.hide()
         calendar.notification = naughty.notify({
             preset      = calendar.notification_preset,
-            text        = ws:gsub("\n*$", ""),
+            text        = ws,
             icon        = calendar.notify_icon,
             timeout     = t_out or calendar.notification_preset.timeout or 5
         })
