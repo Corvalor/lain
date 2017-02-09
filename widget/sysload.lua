@@ -14,10 +14,10 @@ local string       = { match  = string.match }
 local setmetatable = setmetatable
 
 -- System load
--- lain.widgets.sysload
+-- lain.widget.sysload
 local sysload = {}
 
-local function worker(args)
+local function factory(args)
     local args     = args or {}
     local timeout  = args.timeout or 2
     local settings = args.settings or function() end
@@ -40,4 +40,4 @@ local function worker(args)
     return sysload
 end
 
-return setmetatable(sysload, { __call = function(_, ...) return worker(...) end })
+return setmetatable(sysload, { __call = function(_, ...) return factory(...) end })

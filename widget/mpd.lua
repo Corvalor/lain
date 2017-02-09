@@ -20,10 +20,10 @@ local string       = { format = string.format,
 local setmetatable = setmetatable
 
 -- MPD infos
--- lain.widgets.mpd
+-- lain.widget.mpd
 local mpd = {}
 
-local function worker(args)
+local function factory(args)
     local args          = args or {}
     local timeout       = args.timeout or 2
     local password      = (args.password and #args.password > 0 and string.format("password %s\\n", args.password)) or ""
@@ -112,7 +112,7 @@ local function worker(args)
 
                     if not string.match(mpd_now.file, "http.*://") then -- local file instead of http stream
                         local path   = string.format("%s/%s", music_dir, string.match(mpd_now.file, ".*/"))
-                        local cover  = string.format("find '%s' -maxdepth 1 -type f | egrep -i -m1 '%s'", path, cover_pattern)
+                        local cover  = string.format("find '%s' -maxdepth 1 -type f | egrep -i -m1 '%s'", path:gsub("'", "'\\''"), cover_pattern)
                         helpers.async({ shell, "-c", cover }, function(current_icon)
                             common.icon = current_icon:gsub("\n", "")
                             if #common.icon == 0 then common.icon = nil end
@@ -134,4 +134,4 @@ local function worker(args)
     return mpd
 end
 
-return setmetatable(mpd, { __call = function(_, ...) return worker(...) end })
+return setmetatable(mpd, { __call = function(_, ...) return factory(...) end })

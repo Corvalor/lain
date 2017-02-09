@@ -13,10 +13,10 @@ local tonumber     = tonumber
 local setmetatable = setmetatable
 
 -- coretemp
--- lain.widgets.temp
+-- lain.widget.temp
 local temp = {}
 
-local function worker(args)
+local function factory(args)
     local args     = args or {}
     local timeout  = args.timeout or 2
     local tempfile = args.tempfile or "/sys/class/thermal/thermal_zone0/temp"
@@ -42,4 +42,4 @@ local function worker(args)
     return temp
 end
 
-return setmetatable(temp, { __call = function(_, ...) return worker(...) end })
+return setmetatable(temp, { __call = function(_, ...) return factory(...) end })

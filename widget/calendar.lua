@@ -10,6 +10,7 @@ local helpers      = require("lain.helpers")
 local markup       = require("lain.util.markup")
 local awful        = require("awful")
 local naughty      = require("naughty")
+local mouse        = mouse
 local os           = { date   = os.date }
 local string       = { format = string.format,
                        gsub   = string.gsub,
@@ -19,7 +20,7 @@ local tonumber     = tonumber
 local setmetatable = setmetatable
 
 -- Calendar notification
--- lain.widgets.calendar
+-- lain.widget.calendar
 local calendar = { offset = 0 }
 
 function calendar.hide()
@@ -36,13 +37,14 @@ function calendar.show(t_out, inc_offset, scr)
     local offs = inc_offset or 0
     local f
 
+    calendar.notification_preset.screen = scr or (calendar.followtag and awful.screen.focused()) or 1
     calendar.offset = calendar.offset + offs
 
     local current_month = (offs == 0 or calendar.offset == 0)
 
     if current_month then -- today highlighted
         calendar.offset = 0
-        calendar.notify_icon = string.format("%s%s.png", calendar.icons, today)
+        calendar.icon = string.format("%s%s.png", calendar.icons, tonumber(os.date("%d")))
         f = calendar.cal
     else -- no current month showing, no day to highlight
        local month = tonumber(os.date("%m"))
@@ -60,14 +62,8 @@ function calendar.show(t_out, inc_offset, scr)
            year = year - 1
        end
 
-       calendar.notify_icon = nil
+       calendar.icon = nil
        f = string.format("%s %s %s", calendar.cal, month, year)
-    end
-
-    if calendar.followtag then
-        calendar.notification_preset.screen = awful.screen.focused()
-    else
-        calendar.notification_preset.screen = src or 1
     end
 
     helpers.async(f, function(ws)
@@ -79,6 +75,7 @@ function calendar.show(t_out, inc_offset, scr)
         ws = ws:gsub('(%d+)(\n)', markup.color(we, bg, '%1')..'%2')
 	ws = ws:gsub("\n*$", "")
         calendar.hide()
+
         calendar.notification = naughty.notify({
             preset      = calendar.notification_preset,
             text        = ws,
@@ -91,19 +88,15 @@ end
 function calendar.attach(widget)
     widget:connect_signal("mouse::enter", function () calendar.show(0) end)
     widget:connect_signal("mouse::leave", function () calendar.hide() end)
-    widget:buttons(awful.util.table.join(awful.button({ }, 1, function ()
-                                             calendar.show(0, -1, calendar.scr_pos) end),
-                                         awful.button({ }, 3, function ()
-                                             calendar.show(0, 1, calendar.scr_pos) end),
-                                         awful.button({ }, 4, function ()
-                                             calendar.show(0, -1, calendar.scr_pos) end),
-                                         awful.button({ }, 5, function ()
-                                             calendar.show(0, 1, calendar.scr_pos) end)))
+    widget:buttons(awful.util.table.join(awful.button({ }, 1, function () calendar.show(0, -1) end),
+                                         awful.button({ }, 3, function () calendar.show(0,  1) end),
+                                         awful.button({ }, 4, function () calendar.show(0, -1) end),
+                                         awful.button({ }, 5, function () calendar.show(0,  1) end)))
 end
 
-local function worker(args)
+local function factory(args)
     local args                   = args or {}
-    calendar.cal                 = args.cal or "/usr/bin/cal --color=always"
+    calendar.cal                 = args.cal or "/usr/bin/cal"
     calendar.attach_to           = args.attach_to or {}
     calendar.followtag           = args.followtag or false
     calendar.icons               = args.icons or helpers.icons_dir .. "cal/white/"
@@ -120,4 +113,4 @@ local function worker(args)
     for i, widget in ipairs(calendar.attach_to) do calendar.attach(widget) end
 end
 
-return setmetatable(calendar, { __call = function(_, ...) return worker(...) end })
+return setmetatable(calendar, { __call = function(_, ...) return factory(...) end })

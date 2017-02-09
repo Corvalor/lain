@@ -7,19 +7,16 @@
 --]]
 
 local helpers      = require("lain.helpers")
-
 local shell        = require("awful.util").shell
 local focused      = require("awful.screen").focused
 local wibox        = require("wibox")
 local naughty      = require("naughty")
-
 local string       = string
 local tonumber     = tonumber
-
 local setmetatable = setmetatable
 
 -- File system disk space usage
--- lain.widgets.fs
+-- lain.widget.fs
 local fs = { unit  = { ["mb"] = 1024, ["gb"] = 1024^2 } }
 
 function fs.hide()
@@ -45,7 +42,7 @@ function fs.show(seconds, scr)
     })
 end
 
-local function worker(args)
+local function factory(args)
     local args             = args or {}
     local timeout          = args.timeout or 600
     local partition        = args.partition or "/"
@@ -71,7 +68,7 @@ local function worker(args)
 
     function fs.update()
         fs_info, fs_now  = {}, {}
-        helpers.async({ shell, "-c", "LC_ALL=C df -k --output=target,size,used,avail,pcent" }, function(f)
+        helpers.async({ shell, "-c", "/usr/bin/env LC_ALL=C df -k --output=target,size,used,avail,pcent" }, function(f)
             for line in string.gmatch(f, "\n[^\n]+") do
                 local m,s,u,a,p = string.match(line, "(/.-%s).-(%d+).-(%d+).-(%d+).-([%d]+)%%")
                 m = m:gsub(" ", "") -- clean target from any whitespace
@@ -99,7 +96,7 @@ local function worker(args)
             widget = fs.widget
             settings()
 
-            if notify == "on" and tonumber(fs_now.used) >= 99 and not helpers.get_map(partition) then
+            if notify == "on" and #fs_now.used > 0 and tonumber(fs_now.used) >= 99 and not helpers.get_map(partition) then
                 naughty.notify({
                     preset = naughty.config.presets.critical,
                     title  = "Warning",
@@ -127,4 +124,4 @@ local function worker(args)
     return fs
 end
 
-return setmetatable(fs, { __call = function(_, ...) return worker(...) end })
+return setmetatable(fs, { __call = function(_, ...) return factory(...) end })

@@ -6,15 +6,14 @@
                                                   
 --]]
 
-local helpers      = require("lain.helpers")
-local textbox      = require("wibox.widget.textbox")
-local setmetatable = setmetatable
+local helpers = require("lain.helpers")
+local textbox = require("wibox.widget.textbox")
 
--- Template for custom asynchronous widgets
--- lain.widgets.abase
+-- Template for asynchronous watcher widgets
+-- lain.widget.watch
 
-local function worker(args)
-    local abase     = {}
+local function factory(args)
+    local watch     = { widget = args.widget or textbox() }
     local args      = args or {}
     local timeout   = args.timeout or 5
     local nostart   = args.nostart or false
@@ -22,22 +21,20 @@ local function worker(args)
     local cmd       = args.cmd
     local settings  = args.settings or function() widget:set_text(output) end
 
-    abase.widget = args.widget or textbox()
-
-    function abase.update()
+    function watch.update()
         helpers.async(cmd, function(f)
             output = f
-            if output ~= abase.prev then
-                widget = abase.widget
+            if output ~= watch.prev then
+                widget = watch.widget
                 settings()
-                abase.prev = output
+                watch.prev = output
             end
         end)
     end
 
-    abase.timer = helpers.newtimer(cmd, timeout, abase.update, nostart, stoppable)
+    watch.timer = helpers.newtimer(cmd, timeout, watch.update, nostart, stoppable)
 
-    return abase
+    return watch
 end
 
-return setmetatable({}, { __call = function(_, ...) return worker(...) end })
+return factory
