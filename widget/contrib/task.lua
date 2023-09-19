@@ -34,11 +34,22 @@ function task.show(scr)
     helpers.async(task.show_cmd, function(f)
         task.notification = naughty.notify({
             preset = task.notification_preset,
-            title  = task.show_cmd,
+            title  = "Tasks",
             text   = markup.font(task.notification_preset.font,
-                     awful.util.escape(f:gsub("\n*$", "")))
+                     awful.util.escape(f:gsub("\n*$", ""))),
+            destroy = function()
+                task.notification = nil
+            end
         })
     end)
+end
+
+function task.toggle(scr)
+    if task.notification then
+        task.hide()
+    else
+        task.show()
+    end
 end
 
 function task.prompt()
@@ -69,7 +80,8 @@ function task.attach(widget, args)
     if not task.notification_preset then
         task.notification_preset = {
             font = "Monospace 10",
-            icon = helpers.icons_dir .. "/taskwarrior.png"
+            icon = helpers.icons_dir .. "/taskwarrior.png",
+            icon_size = 40
         }
     end
 
