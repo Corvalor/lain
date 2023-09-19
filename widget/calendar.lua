@@ -69,11 +69,11 @@ function calendar.show(t_out, inc_offset, scr)
     helpers.async(f, function(ws)
         fg, bg, we = calendar.notification_preset.fg, calendar.notification_preset.bg, calendar.notification_preset.we
         ws = ws:gsub("<(%s*)%d+>", " %1"..markup.bold(markup.color(bg, fg, today)).." ")
-	ws = ws:gsub("(%d%d%d%d)", "%1 ")
+        ws = ws:gsub("(%d%d%d%d)", "%1 ")
         ws = ws:gsub('(%d+%s%s%s)(\n)', markup.color(we, bg, '%1')..'%2')
         ws = ws:gsub('(%d+%s+%d+)(\n)', markup.color(we, bg, '%1')..'%2')
         ws = ws:gsub('(%d+)(\n)', markup.color(we, bg, '%1')..'%2')
-	ws = ws:gsub("\n*$", "")
+        ws = ws:gsub("\n*$", "")
         calendar.hide()
 
         calendar.notification = naughty.notify({
